@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Records with AJAX Pagination</title>
+    {% load static %}
+    <script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>    
+    <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
+</head>
+<body>
+    <div class="nav-container">
+        <img src="{% static 'images/proven.png' %}" alt="Logo">
+        <nav class="navbar">
+            <a href="#" class="on-home">Home</a>
+            <a href="#" class="on-services">Services</a>
+            <a href="#" class="on-careers">Careers</a>
+            <a href="#" class="on-about">About Us</a>
+        </nav>
+    </div>
+
+    <div class="wrapper">
+        <div class="container">
+            
+            <div class="row">
+                <label for="username">Username:</label>
+                <input type="text" id="username">
+            </div>
+
+            <div class="row">
+                <label for="password">Password:</label>
+                <input type="password" id="password">
+            </div>
+
+            <div class="row">
+                <label for="email">E-Mail:</label>
+                <input type="text" id="email">
+            </div>
+
+            <div class="row">
+                <label for="phnumber">Phone Number:</label>
+                <input type="number" id="phnumber">
+            </div>
+
+            <input type="submit" id="submit" value="Submit">
+
+            <select id="downloadOption" class="download-select">
+                <option value="" disabled selected>Select Download Format</option>
+                <option value="pdf">Download as PDF</option>
+                <option value="csv">Download as CSV</option>
+            </select>
+            
+            <button id="download">Download</button>
+            <div>
+            <label for="recipientEmail">Enter Email:</label>
+            <input type="email" id="recipientEmail" placeholder="Enter recipient's email">
+            <button id="sendEmail">Send via Email</button>
+            
+            <p id="downloadMessage"></p>
+            <p id="emailMessage"></p>
+            </div>
+        </div>
+
+        <div>
+            <h2>Submitted Data</h2>
+            <label for="recordsPerPage" >Records per page:</label>
+            <select id="recordsPerPage">
+                <option value="2">2</option>
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="15">15</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+            </select>
+            
+            <table id="dataTable" style="margin-top:10px">
+            
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Phone Number</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for employee in employees %}
+                    <tr>
+                        <td>{{ employee.username }}</td>
+                        <td>{{ employee.email }}</td>
+                        <td>{{ employee.phnumber }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                
+            </table>
+            <div class="pagination-controls" style="padding:10px">
+                
+            </div>
+            
+        </div>
+        
+    </div>
+    <script>
+        $(document).ready(function () {
+
+                let recordsPerPage = $("#recordsPerPage").val();
+
+                function fetchPage(page, records) {
+                $.ajax({
+                    url: "/firstapp/employee/",
+                    type: "GET",
+                    data: { page: page,
+                        records: records
+                            },
+                    headers: { "X-Requested-With": "XMLHttpRequest" },
+                    success: function (response) {
+                        $("#dataTable tbody").empty(); 
+
+                        $.each(response.employees, function (index, emp) {
+                            $("#dataTable tbody").append(
+                                `<tr>
+                                    <td>${emp.username}</td>
+                                    <td>${emp.email}</td>
+                                    <td>${emp.phnumber}</td>
+                                </tr>`
+                            );
+                        });
+
+                        $(".pagination-controls").html("");
+
+                        let firstDisabled = response.has_previous ? "" : "disabled";
+                        let prevDisabled = response.has_previous ? "" : "disabled";
+                        $(".pagination-controls").append(
+                            `<button class="page-btn" data-page="1" ${firstDisabled}>First</button>
+                             <button class="page-btn" data-page="${response.previous_page_number}" ${prevDisabled}>Previous</button>`
+                        );
+
+                        $(".pagination-controls").append(
+                            `<span> Page ${response.current_page} of ${response.total_pages} </span>`
+                        );
+
+                        let nextDisabled = response.has_next ? "" : "disabled";
+                        let lastDisabled = response.has_next ? "" : "disabled";
+                        $(".pagination-controls").append(
+                            `<button class="page-btn" data-page="${response.next_page_number}" ${nextDisabled}>Next</button>
+                             <button class="page-btn" data-page="${response.total_pages}" ${lastDisabled}>Last</button>`
+                        );
+                    },
+                    error: function (xhr, status, error) {
+                        alert("Error fetching data: " + xhr.responseText);
+                    },
+                });
+                }
+
+            $(document).on("click", ".page-btn", function () {
+                let page = $(this).data("page");
+                fetchPage(page, recordsPerPage);
+            });
+
+            $("#recordsPerPage").change(function () {
+                recordsPerPage = $(this).val();
+                fetchPage(1, recordsPerPage);
+            });
+
+            fetchPage(1, recordsPerPage);
+
+            $("#submit").click(function () {
+                let username = $("#username").val().trim();
+                let email = $("#email").val().trim();
+                let phnumber = $("#phnumber").val().trim();
+                let password = $("#password").val().trim();
+
+                $.ajax({
+                    url: "/firstapp/employee/",
+                    type: "POST",
+                    data: {
+                        username: username,
+                        email: email,
+                        password: password,
+                        phnumber: phnumber,
+                        csrfmiddlewaretoken: "{{ csrf_token }}",
+                    },
+                    success: function (response) {
+                        if (response.user) {
+                            $("#dataTable tbody").append(
+                                `<tr>
+                                    <td>${response.user.username}</td>
+                                    <td>${response.user.email}</td>
+                                    <td>${response.user.phnumber}</td>
+                                </tr>`
+                            );
+                        }
+                        $("#username").val(""); 
+                        $("#password").val("");
+                        $("#email").val("");
+                        $("#phnumber").val("");
+                    },
+                    error: function (xhr, status, error) {
+                        alert("Error: " + xhr.responseText);
+                    },
+                });
+            });
+                $("#sendEmail").click(function () {
+                let selectedFormat = $("#downloadOption").val();
+                let recipientEmail = $("#recipientEmail").val().trim();
+
+                if (!selectedFormat || !recipientEmail) {
+                    alert("Please select a format and enter an email address!");
+                    return;
+                }
+
+                $.ajax({
+                    url: `/firstapp/download-data/?format=${selectedFormat}&email=${recipientEmail}`,
+                    type: "GET",
+                    success: function (response) {
+                        alert(response);
+                    },
+                    error: function (xhr) {
+                        alert("Error: " + xhr.responseText);
+                    },
+                });
+                });
+
+
+            $("#download").click(function () {
+                let selectedFormat = $("#downloadOption").val();
+                
+                if (!selectedFormat) {
+                    $("#downloadMessage").text("Please select a format to download!");
+                    return;
+                }
+                window.location.href = `/firstapp/download-data/?format=${selectedFormat}`;
+            });
+            
+
+        });
+    </script>
+
+</body>
+</html>
