@@ -21,8 +21,76 @@ def welcome(request):
     return render(request, "welcome.html")
 
 
-def register(request):
-    return render(request, "register.html")
+class register(View):
+    def get(self, request):
+        return render(request, "register.html")
+
+    def post(self, request):
+        if request.method == "POST":
+            username = request.POST.get("username")
+            email = request.POST.get("email")
+            phnumber = request.POST.get("phnumber")
+            password = request.POST.get("password")
+            response = {}
+            if not username or not email or not phnumber or not password:
+                response["error"] = "All fields are required!"
+            email_regex = r"^[a-zA-Z0-9.]+@[a-zA-Z0-9.]+\.[a-zA-Z]{2,}$"
+            if email and not re.match(email_regex, email):
+                response["email_error"] = "Invalid email format!"
+            if phnumber and not re.match(r"^\d{10}$", phnumber):
+                response["phnumber_error"] = (
+                    "Phone number must contain exactly 10 digits!"
+                )
+            if collection.find_one({"username": username}):
+                response["username_error"] = "Username already exists!"
+            if collection.find_one({"email": email}):
+                response["email_exists_error"] = "Email already exists!"
+            if collection.find_one({"phnumber": phnumber}):
+                response["phnumber_exists_error"] = "Phone number already exists!"
+            if response:
+                return JsonResponse(response, status=400)
+            hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
+            try:
+                collection.insert_one(
+                    {
+                        "username": username,
+                        "email": email,
+                        "phnumber": phnumber,
+                        "password": hashed_password.decode("utf-8"),
+                    }
+                )
+                response["message"] = "User added successfully!"
+                response["user"] = {
+                    "username": username,
+                    "email": email,
+                    "phnumber": phnumber,
+                }
+                return JsonResponse(response, status=201)
+            except Exception as e:
+                response["database_error"] = "Database error: " + str(e)
+                return JsonResponse(response, status=500)
+
+
+class login(View):
+    def get(self, request):
+        return render(request, "login.html")
+
+    def post(self, request):
+        email = request.POST.get("email")
+        password = request.POST.get("password")
+        if not email or password:
+            return JsonResponse("Please enter all fields")
+        user = collection.find_one({"email": email})
+        if not user:
+            return JsonResponse("Invalid Email")
+        if user:
+            stored_pass = user.get("password")
+            pass_word = bcrypt.checkpw(
+                password.encode("utf-8"), stored_pass.encode("utf-8")
+            )
+
+        else:
+            return JsonResponse("Invalid email")
 
 
 class Demodb(View):
@@ -67,91 +135,7 @@ class Demodb(View):
                     "total_pages": employees.paginator.num_pages,
                 }
             )
-
         return render(request, "main.html", {"employees": employees})
-
-    def post(self, request):
-        if request.method == "POST":
-            username = request.POST.get("username")
-            email = request.POST.get("email")
-            phnumber = request.POST.get("phnumber")
-            password = request.POST.get("password")
-
-            response = {}
-
-            if not username or not email or not phnumber or not password:
-                response["error"] = "All fields are required!"
-
-            email_regex = r"^[a-zA-Z0-9.]+@[a-zA-Z0-9.]+\.[a-zA-Z]{2,}$"
-            if email and not re.match(email_regex, email):
-                response["email_error"] = "Invalid email format!"
-            if phnumber and not re.match(r"^\d{10}$", phnumber):
-                response["phnumber_error"] = (
-                    "Phone number must contain exactly 10 digits!"
-                )
-
-            if collection.find_one({"username": username}):
-                response["username_error"] = "Username already exists!"
-
-            if collection.find_one({"email": email}):
-                response["email_exists_error"] = "Email already exists!"
-
-            if collection.find_one({"phnumber": phnumber}):
-                response["phnumber_exists_error"] = "Phone number already exists!"
-
-            if response:
-                return JsonResponse(response, status=400)
-
-            hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
-
-            try:
-                collection.insert_one(
-                    {
-                        "username": username,
-                        "email": email,
-                        "phnumber": phnumber,
-                        "password": hashed_password.decode("utf-8"),
-                    }
-                )
-                response["message"] = "User added successfully!"
-                response["user"] = {
-                    "username": username,
-                    "email": email,
-                    "phnumber": phnumber,
-                }
-                return JsonResponse(response, status=201)
-            except Exception as e:
-                response["database_error"] = "Database error: " + str(e)
-                return JsonResponse(response, status=500)
-
-
-# class DownloadData(View):
-#     def get(self, request):
-#         employees = list(collection.find({}, {"_id": 0, "username": 1, "email": 1, "phnumber": 1}))
-#         file_format = request.GET.get("format")
-#         if file_format == "csv":
-#             return self.download_csv(employees)
-#         else:
-#             return self.download_pdf(employees)
-
-#     def download_pdf(self, employees):
-#         html_content = render_to_string("pdf_template.html", {"employees": employees})
-#         pdf = pdfkit.from_string(html_content, False)
-
-#         response = HttpResponse(pdf, content_type="application/pdf")
-#         response["Content-Disposition"] = 'attachment; filename="employee_data.pdf"'
-#         return response
-
-#     def download_csv(self, employees):
-#         response = HttpResponse(content_type="text/csv")
-#         response["Content-Disposition"] = 'attachment; filename="employee_data.csv"'
-
-#         writer = csv.writer(response)
-#         writer.writerow(["Username", "Email", "Phone Number"])
-#         for emp in employees:
-#             writer.writerow([emp["username"], emp["email"], emp["phnumber"]])
-
-#         return response
 
 
 class DownloadData(View):

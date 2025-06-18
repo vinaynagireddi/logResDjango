@@ -1,0 +1,36 @@
+<html>
+    <head>
+        <script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>
+    </head>
+    <body>
+        <h1>Login Page</h1>
+        <label for="email" >Email</label>
+        <input type="text" id="email"/><br>
+        <label for="password" >Password</label>
+        <input type="password" id="password"/><br>
+        <button id="login">Login</button>
+        <script>
+            $(document).ready(function(){
+                $('#login').click(function(){
+                    let email = $('#email').val();
+                    let password = $('#password').val();
+                    $.ajax({
+                        url:'login/',
+                        type:'POST',
+                        data:{
+                            email:email,
+                            password:password
+                        },
+                        success:function(response){
+                            window.location.href='employee/';
+                        },
+                        error: function(xhr, status, error){
+                        alert("Login failed: " + xhr.responseText);
+                    }
+                    })
+                })
+            })
+        </script>
+        
+    </body>
+</html>

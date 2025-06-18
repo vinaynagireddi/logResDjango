@@ -3,46 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Employee Records with AJAX Pagination</title>
     {% load static %}
     <script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>
     <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}" />
   </head>
   <body>
-    <div class="nav-container">
-      <img src="{% static 'images/proven.png' %}" alt="Logo" />
-      <nav class="navbar">
-        <a href="#" class="on-home">Home</a>
-        <a href="#" class="on-services">Services</a>
-        <a href="#" class="on-careers">Careers</a>
-        <a href="#" class="on-about">About Us</a>
-      </nav>
-    </div>
-
-    <div class="wrapper">
-      <div class="container">
-        <div class="row">
-          <label for="username">Username:</label>
-          <input type="text" id="username" />
-        </div>
-
-        <div class="row">
-          <label for="password">Password:</label>
-          <input type="password" id="password" />
-        </div>
-
-        <div class="row">
-          <label for="email">E-Mail:</label>
-          <input type="text" id="email" />
-        </div>
-
-        <div class="row">
-          <label for="phnumber">Phone Number:</label>
-          <input type="number" id="phnumber" />
-        </div>
-
-        <input type="submit" id="submit" value="Submit" />
-
         <select id="downloadOption" class="download-select">
           <option value="" disabled selected>Select Download Format</option>
           <option value="pdf">Download as PDF</option>
@@ -158,42 +123,6 @@
 
         fetchPage(1, recordsPerPage);
 
-        $("#submit").click(function () {
-          let username = $("#username").val().trim();
-          let email = $("#email").val().trim();
-          let phnumber = $("#phnumber").val().trim();
-          let password = $("#password").val().trim();
-
-          $.ajax({
-            url: "/employee/",
-            type: "POST",
-            data: {
-              username: username,
-              email: email,
-              password: password,
-              phnumber: phnumber,
-              csrfmiddlewaretoken: "{{ csrf_token }}",
-            },
-            success: function (response) {
-              if (response.user) {
-                $("#dataTable tbody").append(
-                  `<tr>
-                                    <td>${response.user.username}</td>
-                                    <td>${response.user.email}</td>
-                                    <td>${response.user.phnumber}</td>
-                                </tr>`
-                );
-              }
-              $("#username").val("");
-              $("#password").val("");
-              $("#email").val("");
-              $("#phnumber").val("");
-            },
-            error: function (xhr, status, error) {
-              alert("Error: " + xhr.responseText);
-            },
-          });
-        });
         $("#sendEmail").click(function () {
           let selectedFormat = $("#downloadOption").val();
           let recipientEmail = $("#recipientEmail").val().trim();
