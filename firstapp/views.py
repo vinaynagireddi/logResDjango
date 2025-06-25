@@ -78,19 +78,30 @@ class login(View):
     def post(self, request):
         email = request.POST.get("email")
         password = request.POST.get("password")
-        if not email or password:
-            return JsonResponse("Please enter all fields")
+        if not email or not password:
+            return JsonResponse(
+                {"success": False, "error": "Both fields are required!"}, status=400
+            )
         user = collection.find_one({"email": email})
         if not user:
-            return JsonResponse("Invalid Email")
-        if user:
-            stored_pass = user.get("password")
-            pass_word = bcrypt.checkpw(
-                password.encode("utf-8"), stored_pass.encode("utf-8")
+            return JsonResponse(
+                {"success": False, "error": "User not found!"}, status=400
             )
-
+        stored_password = user.get("password")
+        if not stored_password:
+            return JsonResponse(
+                {"success": False, "error": "Password not set for this user!"},
+                status=400,
+            )
+        if isinstance(stored_password, str):
+            stored_password = stored_password.encode("utf-8")
+        if bcrypt.checkpw(password.encode("utf-8"), stored_password):
+            request.session["user_id"] = str(user["_id"])
+            return JsonResponse({"success": True, "message": "Login successful!"})
         else:
-            return JsonResponse("Invalid email")
+            return JsonResponse(
+                {"success": False, "error": "Invalid password!"}, status=400
+            )
 
 
 class Demodb(View):

@@ -63,15 +63,6 @@
           csrfmiddlewaretoken: "{{ csrf_token }}",
         },
         success: function (response) {
-          if (response.user) {
-            $("#dataTable tbody").append(
-              `<tr>
-                                    <td>${response.user.username}</td>
-                                    <td>${response.user.email}</td>
-                                    <td>${response.user.phnumber}</td>
-                                </tr>`
-            );
-          }
           $("#username").val("");
           $("#password").val("");
           $("#email").val("");

@@ -1,6 +1,8 @@
 <html>
     <head>
-        <script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>
+        {% csrf_token %} 
+        {% load static %}
+    <script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>
     </head>
     <body>
         <h1>Login Page</h1>
@@ -14,17 +16,21 @@
                 $('#login').click(function(){
                     let email = $('#email').val();
                     let password = $('#password').val();
+                    let csrfToken = $("input[name=csrfmiddlewaretoken]").val(); 
+
                     $.ajax({
-                        url:'login/',
+                        url:'/login/',
                         type:'POST',
                         data:{
                             email:email,
-                            password:password
+                            password:password,
+                            csrfmiddlewaretoken: csrfToken,
                         },
                         success:function(response){
-                            window.location.href='employee/';
+                            window.location.href='/employee/';
                         },
                         error: function(xhr, status, error){
+                            
                         alert("Login failed: " + xhr.responseText);
                     }
                     })

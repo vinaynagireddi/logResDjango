@@ -8,59 +8,56 @@
     <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}" />
   </head>
   <body>
-        <select id="downloadOption" class="download-select">
-          <option value="" disabled selected>Select Download Format</option>
-          <option value="pdf">Download as PDF</option>
-          <option value="csv">Download as CSV</option>
-        </select>
+    <div>
+      <h2>Submitted Data</h2>
+      <label for="recordsPerPage">Records per page:</label>
+      <select id="recordsPerPage">
+        <option value="2">2</option>
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="15">15</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+      </select>
 
-        <button id="download">Download</button>
-        <div>
-          <label for="recipientEmail">Enter Email:</label>
-          <input
-            type="email"
-            id="recipientEmail"
-            placeholder="Enter recipient's email"
-          />
-          <button id="sendEmail">Send via Email</button>
+      <table id="dataTable" style="margin-top: 10px">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Phone Number</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for employee in employees %}
+          <tr>
+            <td>{{ employee.username }}</td>
+            <td>{{ employee.email }}</td>
+            <td>{{ employee.phnumber }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div class="pagination-controls" style="padding: 10px"></div>
+    </div>
+    <select id="downloadOption" class="download-select">
+      <option value="" disabled selected>Select Download Format</option>
+      <option value="pdf">Download as PDF</option>
+      <option value="csv">Download as CSV</option>
+    </select>
 
-          <p id="downloadMessage"></p>
-          <p id="emailMessage"></p>
-        </div>
-      </div>
+    <button id="download">Download</button>
+    <div>
+      <label for="recipientEmail">Enter Email:</label>
+      <input
+        type="email"
+        id="recipientEmail"
+        placeholder="Enter recipient's email"
+      />
+      <button id="sendEmail">Send via Email</button>
 
-      <div>
-        <h2>Submitted Data</h2>
-        <label for="recordsPerPage">Records per page:</label>
-        <select id="recordsPerPage">
-          <option value="2">2</option>
-          <option value="5">5</option>
-          <option value="10">10</option>
-          <option value="15">15</option>
-          <option value="25">25</option>
-          <option value="50">50</option>
-        </select>
-
-        <table id="dataTable" style="margin-top: 10px">
-          <thead>
-            <tr>
-              <th>Username</th>
-              <th>Email</th>
-              <th>Phone Number</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for employee in employees %}
-            <tr>
-              <td>{{ employee.username }}</td>
-              <td>{{ employee.email }}</td>
-              <td>{{ employee.phnumber }}</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-        <div class="pagination-controls" style="padding: 10px"></div>
-      </div>
+      <p id="downloadMessage"></p>
+      <p id="emailMessage"></p>
     </div>
     <script>
       $(document).ready(function () {
