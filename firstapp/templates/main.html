@@ -40,25 +40,7 @@
       </table>
       <div class="pagination-controls" style="padding: 10px"></div>
     </div>
-    <select id="downloadOption" class="download-select">
-      <option value="" disabled selected>Select Download Format</option>
-      <option value="pdf">Download as PDF</option>
-      <option value="csv">Download as CSV</option>
-    </select>
-
-    <button id="download">Download</button>
-    <div>
-      <label for="recipientEmail">Enter Email:</label>
-      <input
-        type="email"
-        id="recipientEmail"
-        placeholder="Enter recipient's email"
-      />
-      <button id="sendEmail">Send via Email</button>
-
-      <p id="downloadMessage"></p>
-      <p id="emailMessage"></p>
-    </div>
+    <button id="logout">Logout</button>
     <script>
       $(document).ready(function () {
         let recordsPerPage = $("#recordsPerPage").val();
@@ -75,10 +57,10 @@
               $.each(response.employees, function (index, emp) {
                 $("#dataTable tbody").append(
                   `<tr>
-                                    <td>${emp.username}</td>
-                                    <td>${emp.email}</td>
-                                    <td>${emp.phnumber}</td>
-                                </tr>`
+                    <td>${emp.username}</td>
+                    <td>${emp.email}</td>
+                    <td>${emp.phnumber}</td>
+                  </tr>`
                 );
               });
 
@@ -120,36 +102,9 @@
 
         fetchPage(1, recordsPerPage);
 
-        $("#sendEmail").click(function () {
-          let selectedFormat = $("#downloadOption").val();
-          let recipientEmail = $("#recipientEmail").val().trim();
-
-          if (!selectedFormat || !recipientEmail) {
-            alert("Please select a format and enter an email address!");
-            return;
-          }
-
-          $.ajax({
-            url: `download-data/?format=${selectedFormat}&email=${recipientEmail}`,
-            type: "GET",
-            success: function (response) {
-              alert(response);
-            },
-            error: function (xhr) {
-              alert("Error: " + xhr.responseText);
-            },
-          });
-        });
-
-        $("#download").click(function () {
-          let selectedFormat = $("#downloadOption").val();
-
-          if (!selectedFormat) {
-            $("#downloadMessage").text("Please select a format to download!");
-            return;
-          }
-          window.location.href = `../download-data/?format=${selectedFormat}`;
-        });
+      $("#logout").click(function(){
+        window.location.href="../";
+      });
       });
     </script>
   </body>

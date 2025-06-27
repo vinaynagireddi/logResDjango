@@ -6,5 +6,4 @@ urlpatterns = [
     path("register/", register.as_view()),
     path("login/", login.as_view()),
     path("employee/", Demodb.as_view()),
-    path("download-data/", DownloadData.as_view()),
 ]

@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render,redirect
 from django.http import JsonResponse, HttpResponse
 from django.views import View
 import bcrypt
@@ -106,6 +106,12 @@ class login(View):
 
 class Demodb(View):
     def get(self, request):
+        
+        if not request.session.get("user_id"):
+            # Redirect to login or return unauthorized
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                return JsonResponse({"error": "Unauthorized"}, status=401)
+            return redirect("/login/")
         employees_list = list(
             collection.find({}, {"_id": 0, "username": 1, "email": 1, "phnumber": 1})
         )
@@ -148,59 +154,3 @@ class Demodb(View):
             )
         return render(request, "main.html", {"employees": employees})
 
-
-class DownloadData(View):
-    def get(self, request):
-        employees = list(
-            collection.find({}, {"_id": 0, "username": 1, "email": 1, "phnumber": 1})
-        )
-        file_format = request.GET.get("format")
-        recipient_email = request.GET.get("email")
-
-        if not recipient_email:
-            return HttpResponse("Email address is required", status=400)
-
-        if file_format == "csv":
-            file_data, file_name, file_mimetype = self.generate_csv(employees)
-        elif file_format == "pdf":
-            file_data, file_name, file_mimetype = self.generate_pdf(employees)
-        else:
-            return HttpResponse("Invalid format", status=400)
-
-        self.send_email(file_data, file_name, file_mimetype, recipient_email)
-        return HttpResponse(f"Email sent successfully to {recipient_email}")
-
-    def generate_pdf(self, employees):
-        """Generate PDF file in memory"""
-        html_content = render_to_string("pdf_template.html", {"employees": employees})
-        pdf_data = pdfkit.from_string(html_content, False)  # Generate PDF binary data
-        pdf_buffer = BytesIO(pdf_data)  # Convert to BytesIO
-
-        return pdf_buffer, "employee_data.pdf", "application/pdf"
-
-    def generate_csv(self, employees):
-        """Generate CSV file in memory"""
-        csv_buffer = StringIO()
-        writer = csv.writer(csv_buffer)
-        writer.writerow(["Username", "Email", "Phone Number"])
-
-        for emp in employees:
-            writer.writerow([emp["username"], emp["email"], emp["phnumber"]])
-
-        csv_buffer.seek(0)  # Move to start of file
-        return BytesIO(csv_buffer.getvalue().encode()), "employee_data.csv", "text/csv"
-
-    def send_email(self, file_data, file_name, file_mimetype, recipient_email):
-        """Send an email with the file attached"""
-        email_subject = "Employee Data Download"
-        email_body = "Attached is the requested employee data."
-
-        email = EmailMessage(
-            subject=email_subject,
-            body=email_body,
-            from_email="vinaynagireddy222@gmail.com",  # Correct email format
-            to=[recipient_email],
-        )
-
-        email.attach(file_name, file_data.getvalue(), file_mimetype)  # Attach file
-        email.send()
