@@ -41,6 +41,7 @@
       <div class="pagination-controls" style="padding: 10px"></div>
     </div>
     <button id="logout">Logout</button>
+    <button id="download">Download</button>
     <script>
       $(document).ready(function () {
         let recordsPerPage = $("#recordsPerPage").val();
@@ -104,6 +105,9 @@
 
         $("#logout").click(function () {
           window.location.href = "../";
+        });
+        $("#download").click(function () {
+          window.open('/download/', '_blank');
         });
       });
     </script>

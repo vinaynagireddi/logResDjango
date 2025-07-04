@@ -154,3 +154,11 @@ class Demodb(View):
             )
         return render(request, "main.html", {"employees": employees})
 
+class Download(View):
+    def get(self,request):
+        employees=collection.find({},{"_id":0,"username" : 1,"email":1,"phnumber":1})
+        html=render_to_string("pdf_template.html",{"employees":employees})
+        pdf=pdfkit.from_string(html,False)
+        response= HttpResponse(pdf,content_type="application/pdf")
+        # response['Content-Disposition']='attachment;filename="user.pdf"'
+        return  response
